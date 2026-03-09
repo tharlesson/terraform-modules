@@ -10,6 +10,7 @@ O projeto implementa uma base de plataforma com:
 - Dados (RDS) com seguranca e parametros operacionais.
 - Compute (EC2) com bootstrap, IAM profile e opcional de EIP.
 - Compute elastico (EC2 Auto Scaling) com launch template e politicas de escala.
+- Balanceamento de carga com ELB classico e ALB com target groups e health check.
 - IAM para workloads por meio de roles padronizadas.
 - Security baseline com KMS, CloudTrail e AWS Config.
 - Storage (S3) com guardrails de seguranca e lifecycle.
@@ -21,6 +22,8 @@ Essa estrutura permite evolucao progressiva: comecar por um exemplo, promover pa
 ### 1) Modulos (modules/)
 Camada de composicao tecnica. Cada modulo encapsula um dominio de infraestrutura:
 - vpc
+- alb
+- elb
 - rds
 - ec2
 - ec2-autoscaling
@@ -43,6 +46,8 @@ Sao o caminho mais rapido para clonar um novo cliente/ambiente.
 | Modulo | Objetivo | Consumido por stacks |
 |---|---|---|
 | vpc | Rede base com subnets public/private/database, NAT e endpoints | vpc |
+| alb | Application Load Balancer com listener, target group e health check | Disponivel para stacks web/app |
+| elb | Classic ELB com listeners e health check | Disponivel para stacks legados |
 | rds | Banco relacional gerenciado com controles de seguranca e operacao | rds |
 | ec2 | Instancias EC2 com networking, SG, IAM profile e bootstrap | ec2 |
 | ec2-autoscaling | Grupo de Auto Scaling para EC2 com launch template e politicas de escala | ec2-autoscaling |
@@ -64,10 +69,11 @@ Sao o caminho mais rapido para clonar um novo cliente/ambiente.
 1. security-baseline
 2. iam
 3. vpc
-4. s3
-5. rds
-6. ec2
-7. ec2-autoscaling
+4. alb/elb (quando aplicavel)
+5. s3
+6. rds
+7. ec2
+8. ec2-autoscaling
 
 Observacao: rds, ec2 e ec2-autoscaling normalmente consomem informacoes da vpc.
 
