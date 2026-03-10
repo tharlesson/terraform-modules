@@ -1,7 +1,7 @@
 # Terraform AWS Platform Blueprint
 
-Este repositorio apresenta um blueprint Terraform para operacao multi-conta e multi-ambiente em AWS.
-A proposta e separar infraestrutura em modulos reutilizaveis e stacks de ambiente, com exemplos prontos para onboarding rapido.
+Este repositorio apresenta um blueprint Terraform pronto para operacao multi-conta e multi-ambiente em AWS.
+A proposta e separar infraestrutura em modulos reutilizaveis e stacks de ambiente, com exemplos prontos (client-a-dev) para onboarding rapido.
 
 ## Executive Summary
 
@@ -12,7 +12,7 @@ O projeto implementa uma base de plataforma com:
 - Compute elastico (EC2 Auto Scaling) com launch template e politicas de escala.
 - Compute containerizado (ECS) com service, task definition, autoscaling e integracao com ALB/ACM.
 - Compute Kubernetes (EKS) com cluster gerenciado, node groups, OIDC e integracao com ALB/ACM.
-- Balanceamento de carga com ELB classico e ALB com target groups e health check.
+- Balanceamento de carga com modulos de ELB classico e ALB com target groups e health check.
 - IAM para workloads por meio de roles padronizadas.
 - Security baseline com KMS, CloudTrail e AWS Config.
 - Storage (S3) com guardrails de seguranca e lifecycle.
@@ -40,20 +40,20 @@ Camada de composicao tecnica. Cada modulo encapsula um dominio de infraestrutura
 ### 2) Stacks (live/client-a/<env>/<stack>)
 Camada de implementacao por ambiente:
 - Ambientes: dev, stg, prod
-- Stacks: vpc, rds, ec2, ec2-autoscaling, ecs, iam, security-baseline, s3
+- Stacks: vpc, rds, ec2, ec2-autoscaling, ecs, eks, iam, security-baseline, s3
 
 ### 3) Examples (live/examples/)
-Referencias executaveis para client-a-dev-* em todos os stacks.
-Sao o caminho mais rapido para clonar um novo cliente/ambiente.
+Referencias executaveis para client-a-dev-* em todos os stacks do baseline.
+No estado atual, os examples sao somente dev; stg/prod sao promovidos a partir desses exemplos com ajuste de terraform.tfvars e backend.
 
 ## Catalogo de Modulos
 
 | Modulo | Objetivo | Consumido por stacks |
 |---|---|---|
 | vpc | Rede base com subnets public/private/database, NAT e endpoints | vpc |
-| acm | Certificados TLS com validacao DNS/EMAIL e Route53 opcional | Disponivel para stacks web/app e `alb` |
-| alb | Application Load Balancer com listener, target group e health check | Disponivel para stacks web/app |
-| elb | Classic ELB com listeners e health check | Disponivel para stacks legados |
+| acm | Certificados TLS com validacao DNS/EMAIL e Route53 opcional | Consumido por `alb` (direto ou via composicoes em `ecs`/`eks`) |
+| alb | Application Load Balancer com listener, target group e health check | Consumido por composicoes em `ecs`/`eks` ou por stacks custom |
+| elb | Classic ELB com listeners e health check | Modulo disponivel para stacks legados/custom |
 | eks | EKS com cluster, node groups, IAM, OIDC e composicao opcional de ALB/ACM | eks |
 | rds | Banco relacional gerenciado com controles de seguranca e operacao | rds |
 | ec2 | Instancias EC2 com networking, SG, IAM profile e bootstrap | ec2 |
@@ -77,8 +77,8 @@ Sao o caminho mais rapido para clonar um novo cliente/ambiente.
 1. security-baseline
 2. iam
 3. vpc
-4. acm (quando aplicavel)
-5. alb/elb (quando aplicavel)
+4. acm (quando aplicavel em composicoes ou stack custom)
+5. alb/elb (quando aplicavel em composicoes ou stack custom)
 6. s3
 7. rds
 8. ecs
@@ -101,7 +101,7 @@ terraform apply
 
 - Tagging padrao por stack via locals.common_tags.
 - Configuracao por ambiente em terraform.tfvars.
-- Provider com suporte a profile e assume_role.
+- Provider com suporte a profile e assume_role (pronto para uso multi-conta por stack/ambiente).
 - Backend remoto parametrizado por backend.hcl.
 - backend.hcl e .terraform/ ignorados por git para evitar vazamento de contexto local.
 
