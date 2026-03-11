@@ -1,0 +1,12 @@
+# Enforce LF in repository text files across platforms.
+* text=auto eol=lf
+
+# Keep binary files untouched by line-ending normalization.
+*.exe binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
